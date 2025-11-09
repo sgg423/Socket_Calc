@@ -48,7 +48,7 @@ class CalcThread extends Thread {
             BufferedWriter out = new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream()));
 
-            while (true) { // Keep reading requests until "bye" or disconnect
+            while (true) { // Keep reading requests until "exit" or disconnect
                 String inputMessage = in.readLine(); // Read a line from client
                 if (inputMessage == null) break; // Client disconnected
 
@@ -56,7 +56,7 @@ class CalcThread extends Thread {
                 System.out.println("Received: " + inputMessage);
 
                 // Check if client requested to close connection
-                if (inputMessage.equalsIgnoreCase("bye")) {
+                if (inputMessage.equalsIgnoreCase("exit")) {
                     System.out.println("Client requested to terminate.");
                     break;
                 }

@@ -47,12 +47,12 @@ public class CalClient {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-            while (true) { // keep interacting until user types 'bye' or server closes
+            while (true) { // keep interacting until user types 'exit' or server closes
                 System.out.print("Enter expression (e.g., 24 + 42) >> ");
                 String outputMessage = scanner.nextLine();
 
-                if (outputMessage.equalsIgnoreCase("bye")) { // graceful client termination
-                    out.write("bye\r\n"); // send command line
+                if (outputMessage.equalsIgnoreCase("exit")) { // graceful client termination
+                    out.write("exit\r\n"); // send command line
                     out.flush();
                     System.out.println("Closing connection by user request.");
                     break;
