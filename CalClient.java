@@ -2,7 +2,37 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+
 public class CalClient {
+
+    private static InetSocketAddress loadServerInfo() {
+        String host = "localhost";
+        int port = 9999; // default aligned with your server
+        File cfg = new File("server_info.dat");
+
+        if (cfg.exists()) { // config file available
+            Properties props = new Properties();
+            try (FileInputStream fis = new FileInputStream(cfg)) {
+                props.load(fis);
+                String h = props.getProperty("host");
+                String p = props.getProperty("port");
+                if (h != null && !h.isBlank()) host = h.trim(); // host provided
+                if (p != null) {
+                    try {
+                        port = Integer.parseInt(p.trim()); // valid integer port
+                    } catch (NumberFormatException ignore) {
+                        System.out.println("Invalid port in server_info.dat; using default " + port);
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("Failed to read server_info.dat; using defaults.");
+            }
+        } else {
+            System.out.println("server_info.dat not found; using defaults (localhost:" + port + ").");
+        }
+        return new InetSocketAddress(host, port);
+    }
+
     public static void main(String[] args) {
         BufferedReader in = null;
         BufferedWriter out = null;
@@ -10,45 +40,44 @@ public class CalClient {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            socket = new Socket("localhost", 9999);
-            System.out.println("서버에 연결되었습니다.");
+            InetSocketAddress addr = loadServerInfo();
+            socket = new Socket(addr.getHostName(), addr.getPort()); // connect using config/defaults
+            System.out.println("Connected to server (" + addr.getHostName() + ":" + addr.getPort() + ").");
 
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-            while (true) {
-                System.out.print("계산식(빈칸으로 띄어 입력, 예: 24 + 42)>> ");
+            while (true) { // keep interacting until user types 'bye' or server closes
+                System.out.print("Enter expression (e.g., 24 + 42) >> ");
                 String outputMessage = scanner.nextLine();
 
-                if (outputMessage.equalsIgnoreCase("bye")) {
-                    out.write("bye\r\n");
+                if (outputMessage.equalsIgnoreCase("bye")) { // graceful client termination
+                    out.write("bye\r\n"); // send command line
                     out.flush();
-                    System.out.println("서버 연결 종료");
+                    System.out.println("Closing connection by user request.");
                     break;
                 }
 
-                // ★ 여기서 반드시 \r\n !!
-                out.write(outputMessage + "\r\n");
+                out.write(outputMessage + "\r\n"); // request line
                 out.flush();
 
-                String inputMessage = in.readLine(); // 서버 응답 받기
-                if (inputMessage == null) {
-                    System.out.println("서버 연결이 종료되었습니다.");
+                String inputMessage = in.readLine(); // blocking read for one response line
+                if (inputMessage == null) { // server closed connection
+                    System.out.println("Server closed the connection.");
                     break;
                 }
 
-                System.out.println("계산 결과: " + inputMessage);
+                System.out.println("Server reply: " + inputMessage);
             }
 
         } catch (IOException e) {
-            System.out.println("통신 오류: " + e.getMessage());
+            System.out.println("I/O error: " + e.getMessage());
         } finally {
             try {
                 scanner.close();
-                if (socket != null)
-                    socket.close();
+                if (socket != null) socket.close(); // release socket if it was opened
             } catch (IOException e) {
-                System.out.println("자원 해제 중 오류 발생");
+                System.out.println("Error while releasing resources.");
             }
         }
     }
