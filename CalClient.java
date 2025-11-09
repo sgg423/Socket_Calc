@@ -48,13 +48,13 @@ public class CalClient {
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
             while (true) { // keep interacting until user types 'exit' or server closes
-                System.out.print("Enter expression (e.g., 24 + 42) >> ");
+                System.out.print("Enter expression >> ");
                 String outputMessage = scanner.nextLine();
 
                 if (outputMessage.equalsIgnoreCase("exit")) { // graceful client termination
                     out.write("exit\r\n"); // send command line
                     out.flush();
-                    System.out.println("Closing connection by user request.");
+                    System.out.println("Closing connection.");
                     break;
                 }
 
@@ -67,7 +67,7 @@ public class CalClient {
                     break;
                 }
 
-                System.out.println("Server reply: " + inputMessage);
+                System.out.println(inputMessage);
             }
 
         } catch (IOException e) {
